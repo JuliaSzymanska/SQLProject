@@ -194,6 +194,16 @@ INSERT INTO usluga_dla_pokoju VALUES (4, 126);
 INSERT INTO usluga_dla_pokoju VALUES (5, 126);
 INSERT INTO usluga_dla_pokoju VALUES (1, 128);
 INSERT INTO usluga_dla_pokoju VALUES (1, 130);
+INSERT INTO usluga_dla_pokoju VALUES (5, 155);
+INSERT INTO usluga_dla_pokoju VALUES (3, 155);
+INSERT INTO usluga_dla_pokoju VALUES (6, 155);
+INSERT INTO usluga_dla_pokoju VALUES (1, 160);
+INSERT INTO usluga_dla_pokoju VALUES (2, 160);
+INSERT INTO usluga_dla_pokoju VALUES (5, 160);
+INSERT INTO usluga_dla_pokoju VALUES (6, 160);
+INSERT INTO usluga_dla_pokoju VALUES (6, 146);
+INSERT INTO usluga_dla_pokoju VALUES (4, 146);
+INSERT INTO usluga_dla_pokoju VALUES (1, 146);
 SELECT * FROM usluga_dla_pokoju
 
 INSERT INTO sprzatanie VALUES (100, '2020/05/15 12:00:00', '2020/05/15 14:30:00', 'Pelne');

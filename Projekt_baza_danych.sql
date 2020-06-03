@@ -114,13 +114,14 @@ ALTER TABLE archiwum_rezerwacji
 ADD cena_rezerwacji INT,
 	id_rezerwacji_arch INT PRIMARY KEY IDENTITY(10000,1)
 
+
 --6. Na kolumny za³ó¿ ograniczenia takie jak przy tabeli rezerwacja, przy czym data_rezerwacji musi byæ przed aktualn¹ dat¹.
 ALTER TABLE archiwum_rezerwacji 
 ADD CONSTRAINT check_liczba_dni_rezerwacji_arch CHECK (liczba_dni_rezerwacji > 0),
 	CONSTRAINT check_data_rezerwacji_arch CHECK (data_rezerwacji < GETDATE()),
 	CONSTRAINT id_pokoju_arch_foreign_key FOREIGN KEY (id_pokoju) REFERENCES pokoj (id_pokoju),
 	CONSTRAINT id_kleinta_arch_foreign_key FOREIGN KEY (id_klienta) REFERENCES klient (id_klienta)
-
+		
 --7. W tabeli rezerwacja zdejmij restrykcjê dotycz¹c¹ daty rezerwacji (data_rezerwacji musi byæ dat¹ póŸniejsz¹ ni¿ aktualna data).
 ALTER TABLE rezerwacja
 DROP check_data_rezerwacji;
@@ -129,7 +130,7 @@ DROP check_data_rezerwacji;
 INSERT INTO rezerwacja VALUES (123, 1003, 8, '2020/05/02');
 INSERT INTO rezerwacja VALUES (104, 1000, 4, '2020/01/05');
 INSERT INTO rezerwacja VALUES (121, 1002, 3, '2020/02/16');
-INSERT INTO rezerwacja VALUES (145, 1025, 5, '2020/04/22');
+INSERT INTO rezerwacja VALUES (146, 1010, 5, '2020/04/22');
 INSERT INTO rezerwacja VALUES (155, 1013, 12, '2020/02/11');
 INSERT INTO rezerwacja VALUES (160, 1021, 5, '2020/02/25');
 
@@ -151,7 +152,6 @@ CREATE SYNONYM tel FOR rozmowy_telefoniczne;
 
 
 --12. W tabeli archiwum_rezerwacji ustaw wartoœci kolumny cena_rezerwacji na wartoœæ iloczynu cena_bazowa_za_pokoj razy liczba_dni_rezerwacji.
-SELECT * FROM arch
 UPDATE arch
 SET cena_rezerwacji = h.cena_bazowa_za_pokoj * a.liczba_dni_rezerwacji FROM hotel h, arch a, pokoj p
 WHERE a.id_pokoju = p.id_pokoju
@@ -173,12 +173,12 @@ AS BEGIN
       DECLARE @wspolczynnik FLOAT(2); 
 	  
       IF EXISTS (SELECT * FROM pokoj p WHERE p.numer_telefonu_pokoju = @numer_telefonu
-	  AND p.id_hotelu = (SELECT id_hotelu FROM pokoj p WHERE 104 = p.id_pokoju)) 
+	  AND p.id_hotelu = (SELECT id_hotelu FROM pokoj p WHERE p.id_pokoju = @id_pokoju)) 
 		BEGIN
 			SET @wspolczynnik = 0.00
 		END
-	  ELSE IF EXISTS (SELECT * FROM pokoj p WHERE p.numer_telefonu_pokoju = @numer_telefonu
-	  AND p.id_hotelu != (SELECT id_hotelu FROM pokoj p WHERE 104 = p.id_pokoju)) 
+	  ELSE IF EXISTS (SELECT * FROM pokoj p WHERE @numer_telefonu = p.numer_telefonu_pokoju
+	  AND p.id_hotelu != (SELECT id_hotelu FROM pokoj p WHERE @id_pokoju = p.id_pokoju)) 
 		BEGIN
 			SET @wspolczynnik = 0.50
 	    END
@@ -192,32 +192,32 @@ GO
 
 --14. Dodaj do tabeli rezerwacja kolumnê cena_za_telefon typu zmiennoprzecinkowego z dwoma miejscami po przecinku. Wstaw do nowo utworzonej kolumny 
 -- cena_za_polaczenie_telefoniczne pomno¿on¹ przez ró¿nicê minut pomiêdzy godzin¹ rozpoczêcia a godzin¹ zakoñczenia rozmowy. 
-ALTER TABLE arch
+ALTER TABLE archiwum_rezerwacji
 ADD cena_za_telefon FLOAT(2)
 
-UPDATE arch
-SET cena_za_telefon = t.suma_cen
-FROM 
-    (
-        SELECT ar.id_pokoju,SUM(DATEDIFF(MINUTE, rt.godzina_rozpoczecia_rozmowy,CAST(rt.data_zakonczenia_rozmowy as time)) * h.cena_za_polaczenie_telefoniczne) suma_cen
-        FROM tel rt, hotel h, pokoj p, arch ar
-        WHERE ar.id_pokoju = p.id_pokoju
-	AND rt.id_pokoju = p.id_pokoju
-	AND p.id_hotelu = h.id_hotelu
-        GROUP BY ar.id_pokoju
-    ) t
-WHERE t.id_pokoju = arch.id_pokoju
-SELECT * FROM arch;
+--UPDATE arch
+--SET cena_za_telefon = t.suma_cen
+--FROM 
+--    (
+--        SELECT ar.id_pokoju,SUM(DATEDIFF(MINUTE, rt.godzina_rozpoczecia_rozmowy,CAST(rt.data_zakonczenia_rozmowy as time)) * h.cena_za_polaczenie_telefoniczne) suma_cen
+--        FROM tel rt, hotel h, pokoj p, arch ar
+--        WHERE ar.id_pokoju = p.id_pokoju
+--	AND rt.id_pokoju = p.id_pokoju
+--	AND p.id_hotelu = h.id_hotelu
+--        GROUP BY ar.id_pokoju
+--    ) t
+--WHERE t.id_pokoju = arch.id_pokoju
+--SELECT * FROM arch;
 
 UPDATE arch
 SET cena_za_telefon = dbo.obliczWspoczynnik(rt.numer_telefonu, rt.id_pokoju)
 FROM arch ar, tel rt
 WHERE ar.id_pokoju = rt.id_pokoju
-SELECT * FROM arch;
-SELECT * FROM tel;
-SELECT * FROM pokoj
-SELECT dbo.obliczWspoczynnik('12643', 120)
-SELECT dbo.obliczWspoczynnik('12643', 104)
+--SELECT * FROM arch;
+--SELECT * FROM tel;
+--SELECT * FROM pokoj
+--SELECT dbo.obliczWspoczynnik('12643', 120)
+--SELECT dbo.obliczWspoczynnik('12643', 104)
 
 --
 --
@@ -243,7 +243,7 @@ SELECT dbo.obliczWspoczynnik('12643', 104)
 
 --15. Dodaj do tabeli archiwum_rezerwacji kolumnê cena_za_uslugi typu zmiennoprzecinkowego z dwoma miejscami po przecinku. 
 -- Wstaw do nowo utworzonej kolumny  cena_uslugi pomno¿on¹ razy liczba_dni_rezerwacji.
-ALTER TABLE arch
+ALTER TABLE archiwum_rezerwacji
 ADD cena_za_uslugi FLOAT(2)
 
 UPDATE arch
@@ -259,9 +259,25 @@ FROM
 WHERE t.id_pokoju = arch.id_pokoju
 SELECT * FROM arch
 
---16. Dodaj do tabeli archiwum_rezerwacji kolumnê cena_calkowita typu zmiennoprzecinkowego z dwoma miejscami po przecinku. 
+--16. We wszystkich trzech nowo wprowadzonych kolumnach zamien NULL na 0.
+UPDATE arch
+SET cena_rezerwacji = 0
+FROM arch
+WHERE cena_rezerwacji IS NULL
+
+UPDATE arch
+SET cena_za_telefon = 0
+FROM arch
+WHERE cena_za_telefon IS NULL
+
+UPDATE arch
+SET cena_za_telefon = 0
+FROM arch
+WHERE cena_za_uslugi IS NULL
+
+--17. Dodaj do tabeli archiwum_rezerwacji kolumnê cena_calkowita typu zmiennoprzecinkowego z dwoma miejscami po przecinku. 
 -- Wstaw do nowo utworzonej kolumny sumê kolumn cena_za_uslugi, cena_za_telefon, cena_rezerwacji. 
-ALTER TABLE arch
+ALTER TABLE archiwum_rezerwacji
 ADD cena_calkowita FLOAT(2)
 
 UPDATE arch
@@ -269,3 +285,15 @@ SET cena_calkowita = cena_za_uslugi + cena_za_telefon + cena_rezerwacji
 FROM arch
 SELECT * FROM arch
 
+--18. Zlicz w ilu krajach s¹ rozmieszczone hotele, wyœwietl nazwy kraji, w których zlokalizowane s¹ hotele posortowane malej¹co, wyœwietl ile jest pokoi, 
+--dla których przewidziano rezerwacje. 
+SELECT COUNT(DISTINCT m.nazwa_kraju) FROM miasto m, hotel h
+WHERE h.id_miasta = m.id_miasta
+SELECT DISTINCT m.nazwa_kraju FROM miasto m, hotel h
+WHERE h.id_miasta = m.id_miasta
+ORDER BY nazwa_kraju DESC
+
+SELECT COUNT(DISTINCT id_pokoju) FROM rezerwacja
+
+SELECT COUNT(id_pokoju) FROM pokoj
+WHERE id_pokoju NOT IN (SELECT id_pokoju FROM rezerwacja)
