@@ -247,14 +247,47 @@ CREATE SYNONYM arch FOR archiwum_rezerwacji;
 CREATE SYNONYM tel FOR rozmowy_telefoniczne;
 
 
---11. W tabeli archiwum_rezerwacji ustaw wartoœci kolumny cena_rezerwacji na wartoœæ iloczynu 
+--12. W tabeli archiwum_rezerwacji ustaw wartoœci kolumny cena_rezerwacji na wartoœæ iloczynu cena_bazowa_za_pokoj razy liczba_dni_rezerwacji.
 SELECT * FROM arch
 UPDATE arch
 SET cena_rezerwacji = h.cena_bazowa_za_pokoj * a.liczba_dni_rezerwacji FROM hotel h, arch a, pokoj p
 WHERE a.id_pokoju = p.id_pokoju
 	AND p.id_hotelu = h.id_hotelu
 
---12. Dodaj do tabeli rezerwacja kolumnê cena_za_telefon typu zmiennoprzecinkowego z dwoma miejscami po przecinku. Wstaw do nowo utworzonej kolumny 
+--13. Dodaj funkcjê zwracaj¹c¹ wspó³czynnik z jakim trzeba bêdzie pomno¿yæ cenê za po³¹czenie telefoniczne. Funkcja ma przyjmowaæ dwa argumenty: 
+-- numer_telefonu, id_pokoju. Jeœli numer telefonu, na który zosta³o wykonane po³¹czenie nale¿y do któregoœ z pokoi w hotelu z którego wykonano po³¹czenie 
+-- (na podstawie id_pokoju uzyskujemy id_hotelu z którego wykonano po³¹czenie) wtedy wspó³czynnik ustawiany jest na 0. Dla numeru telefonu pokoju znajduj¹cego 
+-- siê w innym hotelu wspó³czynnik ustawiany jest na 0.5, dla numerów telefonów spoza hotelu wspó³czynnik ustawiany jest na 1. 
+
+GO
+CREATE FUNCTION obliczWspoczynnik 
+(
+	@numer_telefonu VARCHAR, 
+	@id_pokoju INT
+)
+RETURNS FLOAT(2)
+AS BEGIN
+      DECLARE @wspolczynnik FLOAT(2); 
+	  
+      IF EXISTS (SELECT * FROM pokoj p WHERE p.numer_telefonu_pokoju = @numer_telefonu
+	  AND p.id_hotelu = (SELECT id_hotelu FROM pokoj p WHERE 104 = p.id_pokoju)) 
+		BEGIN
+			SET @wspolczynnik = 0.00
+		END
+	  ELSE IF EXISTS (SELECT * FROM pokoj p WHERE p.numer_telefonu_pokoju = @numer_telefonu
+	  AND p.id_hotelu != (SELECT id_hotelu FROM pokoj p WHERE 104 = p.id_pokoju)) 
+		BEGIN
+			SET @wspolczynnik = 0.50
+	    END
+	  ELSE
+		BEGIN
+			SET @wspolczynnik = 1.00
+		END
+    RETURN @wspolczynnik; 
+END; 
+GO
+
+--14. Dodaj do tabeli rezerwacja kolumnê cena_za_telefon typu zmiennoprzecinkowego z dwoma miejscami po przecinku. Wstaw do nowo utworzonej kolumny 
 -- cena_za_polaczenie_telefoniczne pomno¿on¹ przez ró¿nicê minut pomiêdzy godzin¹ rozpoczêcia a godzin¹ zakoñczenia rozmowy. 
 ALTER TABLE arch
 ADD cena_za_telefon FLOAT(2)
@@ -273,6 +306,16 @@ FROM
 WHERE t.id_pokoju = arch.id_pokoju
 SELECT * FROM arch;
 
+UPDATE arch
+SET cena_za_telefon = dbo.obliczWspoczynnik(rt.numer_telefonu, rt.id_pokoju)
+FROM arch ar, tel rt
+WHERE ar.id_pokoju = rt.id_pokoju
+SELECT * FROM arch;
+SELECT * FROM tel;
+SELECT * FROM pokoj
+SELECT dbo.obliczWspoczynnik('12643', 120)
+SELECT dbo.obliczWspoczynnik('12643', 104)
+
 --
 --
 --UPDATE archiwum_rezerwacji
@@ -290,46 +333,12 @@ SELECT * FROM arch;
 --BEGIN
 --    SELECT 1
 --END
-GO
-CREATE FUNCTION obliczWspoczynnik 
-(
-	@numer_telefonu VARCHAR, 
-	@id_pokoju INT
-)
-RETURNS FLOAT(2)
-AS BEGIN
-      DECLARE @price FLOAT(2); 
-	  
-      IF EXISTS (SELECT * FROM pokoj p WHERE p.numer_telefonu_pokoju = @numer_telefonu
-	  AND p.id_hotelu = (SELECT id_hotelu FROM pokoj p WHERE 104 = p.id_pokoju)) 
-		BEGIN
-			SET @price = 0.00
-		END
-	  ELSE IF EXISTS (SELECT * FROM pokoj p WHERE p.numer_telefonu_pokoju = @numer_telefonu
-	  AND p.id_hotelu != (SELECT id_hotelu FROM pokoj p WHERE 104 = p.id_pokoju)) 
-		BEGIN
-			SET @price = 0.50
-	    END
-	  ELSE
-		BEGIN
-			SET @price = 1.00
-		END
-    RETURN @price; 
-END; 
-GO
-
-UPDATE arch
-SET cena_za_telefon = dbo.obliczWspoczynnik(rt.numer_telefonu, rt.id_pokoju)
-FROM arch ar, tel rt
-WHERE ar.id_pokoju = rt.id_pokoju
-SELECT * FROM arch;
-SELECT * FROM tel;
-SELECT * FROM pokoj
-SELECT dbo.obliczWspoczynnik('12643', 120)
-SELECT dbo.obliczWspoczynnik('12643', 104)
 
 
---13. Dodaj do tabeli archiwum_rezerwacji kolumnê cena_za_uslugi typu zmiennoprzecinkowego z dwoma miejscami po przecinku. 
+
+
+
+--15. Dodaj do tabeli archiwum_rezerwacji kolumnê cena_za_uslugi typu zmiennoprzecinkowego z dwoma miejscami po przecinku. 
 -- Wstaw do nowo utworzonej kolumny  cena_uslugi pomno¿on¹ razy liczba_dni_rezerwacji.
 ALTER TABLE arch
 ADD cena_za_uslugi FLOAT(2)
@@ -347,7 +356,7 @@ FROM
 WHERE t.id_pokoju = arch.id_pokoju
 SELECT * FROM arch
 
---14. Dodaj do tabeli archiwum_rezerwacji kolumnê cena_calkowita typu zmiennoprzecinkowego z dwoma miejscami po przecinku. 
+--16. Dodaj do tabeli archiwum_rezerwacji kolumnê cena_calkowita typu zmiennoprzecinkowego z dwoma miejscami po przecinku. 
 -- Wstaw do nowo utworzonej kolumny sumê kolumn cena_za_uslugi, cena_za_telefon, cena_rezerwacji. 
 ALTER TABLE arch
 ADD cena_calkowita FLOAT(2)
