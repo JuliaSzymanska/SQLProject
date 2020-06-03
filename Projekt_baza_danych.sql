@@ -297,3 +297,20 @@ SELECT COUNT(DISTINCT id_pokoju) FROM rezerwacja
 
 SELECT COUNT(id_pokoju) FROM pokoj
 WHERE id_pokoju NOT IN (SELECT id_pokoju FROM rezerwacja)
+
+--19. 
+--WITH zwroc_5_najblizszych_rezerwacji --(id_rezerwacji, data_rezerwacji, liczba_dni_rezerwacji)
+--AS
+--(
+-- --   SELECT top 5 id_rezerwacji, data_rezerwacji, liczba_dni_rezerwacji
+-- --   FROM rezerwacja
+--	--GROUP BY id_rezerwacji
+-- --   ORDER BY data_rezerwacji ASC
+-- SELECT * FROM rezerwacja
+--)
+
+-- bezpoœrednio po definicji, kwerenda odwo³uj¹ca siê m.in do tego CTE
+--SELECT *
+--FROM zwroc_5_najblizszych_rezerwacji zwr
+--rezerwacja
+    --ON c.SalesPersonID = P.BusinessEntityID
