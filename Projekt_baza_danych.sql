@@ -86,7 +86,6 @@ CONSTRAINT check_numer_telefonu_rozmowcy CHECK (numer_telefonu NOT LIKE '%^(0-9)
 );
 
 
-
 --1. Wyœwietlenie liczby pokoi w ka¿dym z hoteli.
 SELECT COUNT(*) as 'Liczba pokoi', nazwa_hotelu FROM pokoj p, hotel h
 WHERE p.id_hotelu = h.id_hotelu
@@ -126,10 +125,13 @@ ADD CONSTRAINT check_liczba_dni_rezerwacji_arch CHECK (liczba_dni_rezerwacji > 0
 ALTER TABLE rezerwacja
 DROP check_data_rezerwacji;
 
---8. Dodaj do tabeli rezerwacja 3 rekordy z dat¹ rezerwacji, która ju¿ siê odby³a.
+--8. Dodaj do tabeli rezerwacja 6 rekordy z dat¹ rezerwacji, która ju¿ siê odby³a.
 INSERT INTO rezerwacja VALUES (123, 1003, 8, '2020/05/02');
 INSERT INTO rezerwacja VALUES (104, 1000, 4, '2020/01/05');
 INSERT INTO rezerwacja VALUES (121, 1002, 3, '2020/02/16');
+INSERT INTO rezerwacja VALUES (145, 1025, 5, '2020/04/22');
+INSERT INTO rezerwacja VALUES (155, 1013, 12, '2020/02/11');
+INSERT INTO rezerwacja VALUES (160, 1021, 5, '2020/02/25');
 
 --9. Przenieœ z tabeli rezerwacja te rekordy, które maja przesz³¹ datê do tabeli archiwum_rezerwacji. 
 INSERT INTO archiwum_rezerwacji (id_pokoju, id_klienta, liczba_dni_rezerwacji, data_rezerwacji)

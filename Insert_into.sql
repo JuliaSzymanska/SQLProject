@@ -197,15 +197,43 @@ INSERT INTO usluga_dla_pokoju VALUES (1, 130);
 SELECT * FROM usluga_dla_pokoju
 
 INSERT INTO sprzatanie VALUES (100, '2020/05/15 12:00:00', '2020/05/15 14:30:00', 'Pelne');
-INSERT INTO sprzatanie VALUES (115, '2020/05/19 09:00:00', '2020/05/19 09:30:00', 'Podstawowe');
-INSERT INTO sprzatanie VALUES (103, '2020/05/20 18:00:00', '2020/05/20 19:55:00', 'Pelne');
-INSERT INTO sprzatanie VALUES (110, '2020/05/01 18:00:00', '2020/05/02 12:30:00', 'Pelne');
 INSERT INTO sprzatanie VALUES (100, '2020/03/05 11:00:00', '2020/03/05 11:45:00', 'Podstawowe');
 INSERT INTO sprzatanie VALUES (100, '2020/05/04 18:00:00', '2020/05/04 19:50:00', 'Podstawowe');
+INSERT INTO sprzatanie VALUES (103, '2020/05/20 18:00:00', '2020/05/20 19:55:00', 'Pelne');
+INSERT INTO sprzatanie VALUES (110, '2020/05/01 18:00:00', '2020/05/02 12:30:00', 'Pelne');
+INSERT INTO sprzatanie VALUES (115, '2020/05/19 09:00:00', '2020/05/19 09:30:00', 'Podstawowe');
+INSERT INTO sprzatanie VALUES (116, '2020/03/20 11:40:00', '2020/03/20 11:50:00', 'Podstawowe');
+INSERT INTO sprzatanie VALUES (116, '2020/03/09 08:45:00', '2020/03/09 12:00:00', 'Pelne');
+INSERT INTO sprzatanie VALUES (120, '2020/03/30 10:00:00', '2020/03/30 11:35:00', 'Pelne');
+INSERT INTO sprzatanie VALUES (120, '2020/05/01 13:00:00', '2020/05/01 13:35:00', 'Podstawowe');
+INSERT INTO sprzatanie VALUES (121, '2020/05/12 14:00:00', '2020/05/12 14:50:00', 'Podstawowe');
+INSERT INTO sprzatanie VALUES (121, '2020/04/29 19:10:00', '2020/05/30 09:50:00', 'Pelne');
+INSERT INTO sprzatanie VALUES (125, '2020/05/20 09:00:00', '2020/05/20 10:55:00', 'Pelne');
+INSERT INTO sprzatanie VALUES (128, '2020/04/11 12:00:00', '2020/04/11 12:30:00', 'Podstawowe');
+INSERT INTO sprzatanie VALUES (130, '2020/05/10 10:00:00', '2020/05/10 10:30:00', 'Podstawowe');
+INSERT INTO sprzatanie VALUES (130, '2020/01/23 09:00:00', '2020/01/23 09:30:00', 'Podstawowe');
+INSERT INTO sprzatanie VALUES (131, '2020/05/20 17:00:00', '2020/05/20 17:50:00', 'Podstawowe');
+INSERT INTO sprzatanie VALUES (133, '2020/05/09 11:25:00', '2020/05/09 11:55:00', 'Podstawowe');
+INSERT INTO sprzatanie VALUES (133, '2020/03/20 10:00:00', '2020/03/30 11:35:00', 'Pelne');
+INSERT INTO sprzatanie VALUES (138, '2020/05/01 13:00:00', '2020/05/01 13:35:00', 'Podstawowe');
+INSERT INTO sprzatanie VALUES (138, '2020/04/26 16:00:00', '2020/04/26 16:50:00', 'Pelne');
+INSERT INTO sprzatanie VALUES (139, '2020/02/28 15:10:00', '2020/02/28 15:40:00', 'Podstawowe');
+INSERT INTO sprzatanie VALUES (143, '2020/04/10 12:00:00', '2020/04/10 14:55:00', 'Pelne');
+INSERT INTO sprzatanie VALUES (150, '2020/03/12 11:00:00', '2020/03/12 12:30:00', 'Podstawowe');
+INSERT INTO sprzatanie VALUES (160, '2020/05/01 06:00:00', '2020/05/01 10:30:00', 'Pelne');
+INSERT INTO sprzatanie VALUES (162, '2020/02/23 09:00:00', '2020/02/23 09:30:00', 'Podstawowe');
 SELECT * FROM sprzatanie
 
 INSERT INTO rozmowy_telefoniczne VALUES (123, '205947321', '15:30:45', '2020/05/03 15:32:04');
-INSERT INTO rozmowy_telefoniczne VALUES (104, '97465', '10:21:05', '2020/05/02 11:01:37');
+INSERT INTO rozmowy_telefoniczne VALUES (104, '97465', '10:21:05', '2020/01/06 11:01:37');
 INSERT INTO rozmowy_telefoniczne VALUES (121, '04123', '18:11:40', '2020/02/16 18:14:09');
 INSERT INTO rozmowy_telefoniczne VALUES (126, '197495427', '06:13:42', '2020/05/04 06:15:55');
+INSERT INTO rozmowy_telefoniczne VALUES (123, '12432', '11:22:34', '2020/05/04 11:25:06');
+INSERT INTO rozmowy_telefoniczne VALUES (104, '97465', '23:04:15', '2020/01/06 23:06:12');
+INSERT INTO rozmowy_telefoniczne VALUES (121, '604978342', '11:11:12', '2020/02/17 13:54:34');
+INSERT INTO rozmowy_telefoniczne VALUES (126, '18976', '06:13:42', '2020/05/04 06:15:55');
+INSERT INTO rozmowy_telefoniczne VALUES (118, '68345', '11:22:34', '2020/05/04 11:25:06');
+INSERT INTO rozmowy_telefoniczne VALUES (145, '19235', '13:05:22', '2020/04/2 13:12:21');
+INSERT INTO rozmowy_telefoniczne VALUES (155, '12432', '04:45:59', '2020/02/13 05:54:11');
+INSERT INTO rozmowy_telefoniczne VALUES (160, '205948876', '13:17:23', '2020/02/28 14:45:13');
 SELECT * FROM rozmowy_telefoniczne
