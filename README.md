@@ -2,7 +2,10 @@
 
 Baza danych systemu zarządzania hotelami. 
 
-### Założenia
+## Diagram
+![Przed_zapytaniami.png](https://github.com/JuliaSzymanska/SQLProject/blob/master/Przed_zapytaniami.png)
+
+## Założenia
 1.	Hotele zlokalizowane są w różnych miastach, różnych państw. 
 2.	W jednym mieście może znajdować się wiele hoteli tej samej sieci. 
 3.	W każdym hotelu znajduje się wiele pokoi. 
@@ -16,7 +19,7 @@ Baza danych systemu zarządzania hotelami.
 11.	Rozmowy wykonane przez telefon hotelowy są płatne z ustaloną z góry ceną dla każdego hotelu inną. Połączenia wewnątrz hotelu (z innym pokojem w tym hotelu) są darmowe. Połączenia z innymi hotelami są płatne ze zniżką 50%, pozostałe połączenia są w pełni płatne. 
 12. Przy wykwaterowaniu rezerwacja zostaje przeniesiona do historii rezerwacji wraz z opłatą jaką klient musiał wnieść za rezerwację, usługi dodatkowe oraz rozmowy telefoniczne. 
 
-### Tabele
+## Tabele
 * Miasto
 * Hotel
 * Pokój
