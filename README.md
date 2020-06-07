@@ -14,6 +14,7 @@ Baza danych systemu zarządzania hotelami.
 9.	Po sprzątnięciu każdego pokoju, rejestrowana jest data sprzątania wraz z godziną rozpoczęcia, data zakończenia sprzątania wraz z godziną, rodzaj sprzątania (pełne – po wykwaterowaniu klientów, podstawowe – podczas rezerwacji pokoju). 
 10.	Rozmowy wykonywane przez telefon hotelowy są rejestrowane. Zapisywana jest data wykonania połączenia wraz z godziną rozpoczęcia i godziną zakończenia, numer telefonu, na który wykonano połączenie oraz id pokoju.  Przy nowej rezerwacji pokoju, rozmowy dla tego pokoju są zerowane.
 11.	Rozmowy wykonane przez telefon hotelowy są płatne z ustaloną z góry ceną dla każdego hotelu inną. Połączenia wewnątrz hotelu (z innym pokojem w tym hotelu) są darmowe. Połączenia z innymi hotelami są płatne ze zniżką 50%, pozostałe połączenia są w pełni płatne. 
+12. Przy wykwaterowaniu rezerwacja zostaje przeniesiona do historii rezerwacji wraz z opłatą jaką klient musiał wnieść za rezerwację, usługi dodatkowe oraz rozmowy telefoniczne. 
 
 ### Tabele
 * Miasto
@@ -25,4 +26,5 @@ Baza danych systemu zarządzania hotelami.
 * Usługa dla rezerwacji
 * Sprzątanie
 * Rozmowy telefoniczne
+* Archiwum rezerwacji
 
