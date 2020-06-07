@@ -96,10 +96,10 @@ CONSTRAINT check_numer_telefonu_rozmowcy CHECK (numer_telefonu NOT LIKE '%^(0-9)
 GO
 
 
---1. Wyœwietlenie liczby pokoi w ka¿dym z hoteli.
+--1. Wyœwietlenie liczby pokoi w ka¿dym z hoteli. Na koñcu dodaj podstumowanie ile jest ³¹cznie pokoi. 
 SELECT COUNT(*) as 'Liczba pokoi', nazwa_hotelu FROM pokoj p, hotel h
 WHERE p.id_hotelu = h.id_hotelu
-GROUP BY nazwa_hotelu
+GROUP BY ROLLUP(nazwa_hotelu)
 
 --2. Wyœwietlenie nazwy hotelu, ceny bazowej za pokój, nazwa miasta przy tworzeniu rankingu hoteli na podstawie cen pokoi bez przeskoku. 
 SELECT nazwa_hotelu, cena_bazowa_za_pokoj, nazwa_miasta,
@@ -126,13 +126,85 @@ ORDER BY nazwa_kraju DESC
 SELECT COUNT(id_pokoju) FROM pokoj
 WHERE id_pokoju NOT IN (SELECT id_pokoju FROM rezerwacja)
 
---7. Utwórz pust¹ tabelê archiwum_rezerwacji na podstawie tabeli rezerwacja pomijaj¹c kolumnê id_rezerwacji. 
+
+-- 7. Wyœwietl piêæ najbli¿szych rezerwacji. 
+WITH zwroc_5_najblizszych_rezerwacji
+AS
+(
+    SELECT top 5 id_rezerwacji, data_rezerwacji, liczba_dni_rezerwacji
+    FROM rezerwacja
+	GROUP BY data_rezerwacji, id_rezerwacji, liczba_dni_rezerwacji
+    ORDER BY data_rezerwacji ASC
+)
+SELECT * FROM zwroc_5_najblizszych_rezerwacji
+GO
+
+-- 8. Wyœwietl wszystkie reerwacje (id_rezerwacji, dat_rezerwacji, liczba_dni_rezerwacji) dla klienta o nazwisku Kowalczyk.
+SELECT id_rezerwacji, data_rezerwacji, liczba_dni_rezerwacji
+FROM rezerwacja r, klient k
+WHERE r.id_klienta = k.id_klienta AND k.nazwisko_klienta = 'KOWALCZYK'
+GROUP BY data_rezerwacji, id_rezerwacji, liczba_dni_rezerwacji
+ORDER BY data_rezerwacji ASC
+GO
+
+-- 9. Wyœwietl wszystkie us³ugi, które s¹ zarejestrowane dla rezerwacji dla klienta o nazwisku 'Dudziak'
+SELECT DISTINCT u.nazwa_uslugi FROM usluga u, usluga_dla_rezerwacji ur, klient k, rezerwacja r
+WHERE ur.id_uslugi = u.id_uslugi
+AND ur.id_rezerwacji = r.id_rezerwacji
+AND r.id_klienta = k.id_klienta
+AND k.nazwisko_klienta LIKE 'Dudziak'
+
+-- 10. Wyœwietl imiona, nazwiska, numery telefonów klietów, których imiê koñczy siê na literkê 'a'.
+SELECT imie_klienta, nazwisko_klienta, numer_telefonu_klienta FROM klient
+WHERE imie_klienta LIKE '%a'
+
+-- 11. Wyœwietl imiona, nazwiska, adresy klientów, którzy mieszkaj¹ w Hiszpani. 
+SELECT imie_klienta, nazwisko_klienta, adres_zamieszkania FROM klient
+WHERE adres_zamieszkania LIKE '%Hiszpania%'
+
+-- 12. Wyœwietl id_rezerwacji, oraz licza_dni_rezerwacji, data_rezerwacji oraz datê wymeldowania jako data_wymeldowania. 
+SELECT id_rezerwacji, liczba_dni_rezerwacji, data_rezerwacji, DATEADD(DAY, liczba_dni_rezerwacji, data_rezerwacji) AS data_wymeldowania
+FROM rezerwacja
+ORDER BY liczba_dni_rezerwacji
+
+-- 13. Wyœwietl wszystkie rezerwacje przewidziane na miesi¹c lipiec. 
+SELECT id_rezerwacji, liczba_dni_rezerwacji, data_rezerwacji
+FROM rezerwacja
+WHERE MONTH(data_rezerwacji) = 7
+ORDER BY id_rezerwacji
+
+-- 14. Wyœwietl id_sprzatania, id_pokoju, czas trwania sprzatania jako czas_trwania wszystkich pe³nych sprz¹tañ. 
+SELECT id_sprzatania, id_pokoju, CAST((data_zakonczenia_sprzatania - data_rozpoczecia_sprzatania) AS TIME(0)) AS czas_trwania FROM sprzatanie
+WHERE rodzaj_sprzatania = 'Pelne'
+
+-- 15. Wyœwietl nazwê hotelu, nazwê miasta, nazwê pañstwa dla hoteli, które maj¹ iloœæ zarejestrowanych pokoi wiêksz¹ ni¿ 5.
+SELECT h.nazwa_hotelu, m.nazwa_miasta, m.nazwa_kraju FROM hotel h, miasto m
+WHERE h.id_miasta = m.id_miasta
+AND (SELECT COUNT(id_pokoju) FROM pokoj p WHERE p.id_hotelu = h.id_hotelu) > 5
+
+-- 16. Wyœwietl wszystkie rozmowy telefoniczne, które trwa³y d³u¿ej ni¿ 5 minut.
+SELECT * FROM rozmowy_telefoniczne rt
+WHERE DATEDIFF(MINUTE, godzina_rozpoczecia_rozmowy, CAST(data_zakonczenia_rozmowy AS TIME)) > 5
+
+-- 17. Wyœwietl id_rezerwacji oraz data_rezerwacji dla wszystkich rezerwacji odbywaj¹cych siê po 15 sierpnia 2020 roku. 
+SELECT id_rezerwacji, data_rezerwacji FROM rezerwacja 
+WHERE data_rezerwacji > CONVERT(DATE, '2020/08/15')
+
+-- 18. Wyœwietl wszystkich klientów, których numer telefonu zaczyna siê od liczby '6' i koñczy siê na liczbê 2, ich imiê i nazwisko po³¹cz w jednej kolumnie o nazwie imie_i_nazwisko. 
+SELECT CONCAT(imie_klienta, ' ', nazwisko_klienta) AS imie_i_nazwisko, numer_telefonu_klienta FROM klient
+WHERE numer_telefonu_klienta LIKE '6%2'
+
+--19. Podwy¿sz wszystkim hotelom cenê bazow¹ za pokój o 5%.
+UPDATE hotel
+SET cena_bazowa_za_pokoj = 1.05 * cena_bazowa_za_pokoj
+
+--19. Utwórz pust¹ tabelê archiwum_rezerwacji na podstawie tabeli rezerwacja pomijaj¹c kolumnê id_rezerwacji. 
 SELECT id_pokoju, id_klienta, liczba_dni_rezerwacji, data_rezerwacji INTO archiwum_rezerwacji 
 FROM rezerwacja
 WHERE 1 = 0
 GO
 
---8. Dodaj do tabeli archiwum_rezerwacji kolumnê cena_rezerwacji typu ca³kowitego oraz kolumnê id_rezerwacji_arch typu ca³kowitego przyrostowego 
+--20. Dodaj do tabeli archiwum_rezerwacji kolumnê cena_rezerwacji typu ca³kowitego oraz kolumnê id_rezerwacji_arch typu ca³kowitego przyrostowego 
 -- od 10000 co 1 bêd¹ca kluczem g³ównym. Na kolumny za³ó¿ ograniczenia takie jak przy tabeli rezerwacja, przy czym data_rezerwacji musi byæ przed aktualn¹ dat¹.
 -- W tabeli rezerwacja zdejmij restrykcjê dotycz¹c¹ daty rezerwacji (data_rezerwacji musi byæ dat¹ póŸniejsz¹ ni¿ aktualna data). W tabeli rezerwacja zdejmij
 -- restrykcjê dotycz¹c¹ daty rezerwacji (data_rezerwacji musi byæ dat¹ póŸniejsz¹ ni¿ aktualna data). Dodaj do tabeli rezerwacja 6 rekordy z dat¹ rezerwacji, 
@@ -188,19 +260,19 @@ SELECT id_pokoju, id_klienta, liczba_dni_rezerwacji, data_rezerwacji, id_rezerwa
 WHERE data_rezerwacji < GETDATE()
 GO
 
---10. Dodaj synonim dla tabeli archiwum_rezerwacji ustawiaj¹c jego wartoœæ na arch oraz dla tabeli rozmowy_telefoniczne na wartoœæ tel. 
+--21. Dodaj synonim dla tabeli archiwum_rezerwacji ustawiaj¹c jego wartoœæ na arch oraz dla tabeli rozmowy_telefoniczne na wartoœæ tel. 
 -- W tabeli archiwum_rezerwacji ustaw wartoœci kolumny cena_rezerwacji na wartoœæ iloczynu cena_bazowa_za_pokoj razy liczba_dni_rezerwacji.
 CREATE SYNONYM arch FOR archiwum_rezerwacji;
 CREATE SYNONYM tel FOR rozmowy_telefoniczne;
 GO
 
 UPDATE arch
-SET cena_rezerwacji = h.cena_bazowa_za_pokoj * a.liczba_dni_rezerwacji FROM hotel h, arch a, pokoj p
+SET cena_rezerwacji = h.cena_bazowa_za_pokoj * p.liczba_pomieszczen * p.liczba_przewidzianych_osob * a.liczba_dni_rezerwacji FROM hotel h, arch a, pokoj p
 WHERE a.id_pokoju = p.id_pokoju
 	AND p.id_hotelu = h.id_hotelu
 GO
 
---11. Dodaj funkcjê zwracaj¹c¹ wspó³czynnik z jakim trzeba bêdzie pomno¿yæ cenê za po³¹czenie telefoniczne. Funkcja ma przyjmowaæ dwa argumenty: 
+--22. Dodaj funkcjê zwracaj¹c¹ wspó³czynnik z jakim trzeba bêdzie pomno¿yæ cenê za po³¹czenie telefoniczne. Funkcja ma przyjmowaæ dwa argumenty: 
 -- numer_telefonu, id_pokoju. Jeœli numer telefonu, na który zosta³o wykonane po³¹czenie nale¿y do któregoœ z pokoi w hotelu z którego wykonano po³¹czenie 
 -- (na podstawie id_pokoju uzyskujemy id_hotelu z którego wykonano po³¹czenie) wtedy wspó³czynnik ustawiany jest na 0. Dla numeru telefonu pokoju znajduj¹cego 
 -- siê w innym hotelu wspó³czynnik ustawiany jest na 0.5, dla numerów telefonów spoza hotelu wspó³czynnik ustawiany jest na 1. Dodaj do tabeli rezerwacja kolumnê 
@@ -254,7 +326,7 @@ FROM
     ) t
 WHERE t.id_pokoju = arch.id_pokoju
 
---12. Dodaj do tabeli archiwum_rezerwacji kolumnê cena_za_uslugi typu zmiennoprzecinkowego z dwoma miejscami po przecinku. 
+--23. Dodaj do tabeli archiwum_rezerwacji kolumnê cena_za_uslugi typu zmiennoprzecinkowego z dwoma miejscami po przecinku. 
 -- Wstaw do nowo utworzonej kolumny  cena_uslugi pomno¿on¹ razy liczba_dni_rezerwacji.
 ALTER TABLE archiwum_rezerwacji
 ADD cena_za_uslugi FLOAT(2)
@@ -273,7 +345,7 @@ FROM
 WHERE t.id_rezerwacji = arch.id_rezerwacji
 GO
 
---9. Usuñ z tabeli  usluga_dla_rezerwacji wszystkie rekordy dla rejestracji z przesz³¹ dat¹. Usuñ z tabeli rezerwacja wszystkie rekordy, które maj¹ przesz³¹ datê 
+--24. Usuñ z tabeli  usluga_dla_rezerwacji wszystkie rekordy dla rejestracji z przesz³¹ dat¹. Usuñ z tabeli rezerwacja wszystkie rekordy, które maj¹ przesz³¹ datê 
 -- rezerwacji. Na³ó¿ ponownie restrykcjê na tabelê rezerwacja by data_rezerwacji mog³a byæ tylko dat¹ póŸniejsz¹ ni¿ aktualna data. 
 DELETE FROM usluga_dla_rezerwacji WHERE id_rezerwacji IN (SELECT id_rezerwacji FROM rezerwacja WHERE data_rezerwacji < GETDATE())
 GO
@@ -285,7 +357,7 @@ ALTER TABLE rezerwacja
 ADD CONSTRAINT check_data_rezerwacji CHECK (data_rezerwacji > GETDATE());
 GO
 
---13. We wszystkich trzech nowo wprowadzonych kolumnach zamien NULL na 0.Dodaj do tabeli archiwum_rezerwacji kolumnê cena_calkowita typu zmiennoprzecinkowego 
+--25. We wszystkich trzech nowo wprowadzonych kolumnach zamien NULL na 0.Dodaj do tabeli archiwum_rezerwacji kolumnê cena_calkowita typu zmiennoprzecinkowego 
 -- z dwoma miejscami po przecinku. Wstaw do nowo utworzonej kolumny sumê kolumn cena_za_uslugi, cena_za_telefon, cena_rezerwacji. 
 UPDATE arch
 SET cena_rezerwacji = 0
@@ -315,86 +387,13 @@ FROM arch
 SELECT * FROM arch
 GO
 
---14. Wyœwietl piêæ najbli¿szych rezerwacji. 
-WITH zwroc_5_najblizszych_rezerwacji
-AS
-(
-    SELECT top 5 id_rezerwacji, data_rezerwacji, liczba_dni_rezerwacji
-    FROM rezerwacja
-	GROUP BY data_rezerwacji, id_rezerwacji, liczba_dni_rezerwacji
-    ORDER BY data_rezerwacji ASC
-)
-SELECT * FROM zwroc_5_najblizszych_rezerwacji
-GO
-
--- 15. Wyœwietl wszystkie id_rezerwacji, dat_rezerwacji, liczba_dni_rezerwacji dla klienta o nazwisku Kowalczyk.
-SELECT id_rezerwacji, data_rezerwacji, liczba_dni_rezerwacji
-FROM rezerwacja r, klient k
-WHERE r.id_klienta = k.id_klienta AND k.nazwisko_klienta = 'KOWALCZYK'
-GROUP BY data_rezerwacji, id_rezerwacji, liczba_dni_rezerwacji
-ORDER BY data_rezerwacji ASC
-GO
-
--- 16. Wyœwietl wszystkie us³ugi, które s¹ zarejestrowane dla rezerwacji dla klienta o nazwisku 'Dudziak'
-SELECT DISTINCT u.nazwa_uslugi FROM usluga u, usluga_dla_rezerwacji ur, klient k, rezerwacja r
-WHERE ur.id_uslugi = u.id_uslugi
-AND ur.id_rezerwacji = r.id_rezerwacji
-AND r.id_klienta = k.id_klienta
-AND k.nazwisko_klienta LIKE 'Dudziak'
-
--- 17. Wyœwietl imiona, nazwiska, numery telefonów klietów, których imiê koñczy siê na literkê 'a'.
-SELECT imie_klienta, nazwisko_klienta, numer_telefonu_klienta FROM klient
-WHERE imie_klienta LIKE '%a'
-
--- 18. Wyœwietl imiona, nazwiska, adresy klientów, którzy mieszkaj¹ w Hiszpani. 
-SELECT imie_klienta, nazwisko_klienta, adres_zamieszkania FROM klient
-WHERE adres_zamieszkania LIKE '%Hiszpania%'
-
--- 19. Wyœwietl id_rezerwacji, oraz licza_dni_rezerwacji, data_rezerwacji oraz datê wymeldowania jako data_wymeldowania. 
-SELECT id_rezerwacji, liczba_dni_rezerwacji, data_rezerwacji, DATEADD(DAY, liczba_dni_rezerwacji, data_rezerwacji) AS data_wymeldowania
-FROM rezerwacja
-ORDER BY liczba_dni_rezerwacji
-
--- 20. Wyœwietl wszystkie rezerwacje przewidziane na miesi¹c lipiec. 
-SELECT id_rezerwacji, liczba_dni_rezerwacji, data_rezerwacji
-FROM rezerwacja
-WHERE MONTH(data_rezerwacji) = 7
-ORDER BY id_rezerwacji
-
--- 21. Wyœwietl id_sprzatania, id_pokoju, czas trwania sprzatania jako czas_trwania wszystkich pe³nych sprz¹tañ. 
-SELECT id_sprzatania, id_pokoju, CAST((data_zakonczenia_sprzatania - data_rozpoczecia_sprzatania) AS TIME(0)) AS czas_trwania FROM sprzatanie
-WHERE rodzaj_sprzatania = 'Pelne'
-
--- 22. Wyœwietl nazwê hotelu, nazwê miasta, nazwê pañstwa dla hoteli, które maj¹ iloœæ zarejestrowanych pokoi wiêksz¹ ni¿ 5.
-SELECT h.nazwa_hotelu, m.nazwa_miasta, m.nazwa_kraju FROM hotel h, miasto m
-WHERE h.id_miasta = m.id_miasta
-AND (SELECT COUNT(id_pokoju) FROM pokoj p WHERE p.id_hotelu = h.id_hotelu) > 5
-
--- 23. Wyœwietl wszystkie rozmowy telefoniczne, które trwa³y d³u¿ej ni¿ 5 minut.
-SELECT * FROM rozmowy_telefoniczne rt
-WHERE DATEDIFF(MINUTE, godzina_rozpoczecia_rozmowy, CAST(data_zakonczenia_rozmowy AS TIME)) > 5
-
--- 24. Wyœwietl ile ka¿dy z hoteli zarobi³ na dotychczasowych rezerwacjach. 
-SELECT h.nazwa_hotelu, ROUND(SUM(a.cena_calkowita), 2) AS zarobki FROM arch a, pokoj p, hotel h
+-- 26. Wyœwietl 3 hotele, które zarobi³y najwiêcej na dotychczasowych rezerwacjach. 
+SELECT TOP 3 h.nazwa_hotelu, ROUND(SUM(a.cena_calkowita), 2) AS zarobki FROM arch a, pokoj p, hotel h
 WHERE a.id_pokoju = p.id_pokoju
 AND p.id_hotelu = h.id_hotelu
 GROUP BY h.nazwa_hotelu
 
--- 25. Wyœwietl ile ka¿dy klient zap³aci³ za rezerwacje, które jak dot¹d siê odby³y. 
+-- 27. Wyœwietl ile ka¿dy klient zap³aci³ za rezerwacje, które jak dot¹d siê odby³y. Na koñcu dodaj podsumowanie ile ³¹cznie wydali klienci. 
 SELECT k.id_klienta, ROUND(SUM(a.cena_calkowita), 2) AS wydatki FROM arch a, klient k
 WHERE a.id_klienta = k.id_klienta
-GROUP BY k.id_klienta
-
--- 26. Wyœwietl id_rezerwacji oraz data_rezerwacji dla wszystkich rezerwacji odbywaj¹cych siê po 15 sierpnia 2020 roku. 
-SELECT id_rezerwacji, data_rezerwacji FROM rezerwacja 
-WHERE data_rezerwacji > CONVERT(DATE, '2020/08/15')
-
--- 27. Wyœwietl wszystkich klientów, których numer telefonu zaczyna siê od liczby '6' i koñczy siê na liczbê 2, ich imiê i nazwisko po³¹cz w jednej kolumnie o nazwie imie_i_nazwisko. 
-SELECT CONCAT(imie_klienta, ' ', nazwisko_klienta) AS imie_i_nazwisko, numer_telefonu_klienta FROM klient
-WHERE numer_telefonu_klienta LIKE '6%2'
-
-
-SELECT * FROM arch
-SELECT * FROM rezerwacja
-SELECT * FROM klient
-SELECT * FROM rozmowy_telefoniczne
+GROUP BY ROLLUP(k.id_klienta)
