@@ -107,11 +107,11 @@ DENSE_RANK() OVER (ORDER BY cena_bazowa_za_pokoj DESC) AS 'Ranking cen pokoi'
 FROM hotel h, miasto m
 WHERE h.id_miasta = m.id_miasta
 
---3. Wyœwietlenie œredniej ceny po³¹czeñ telefonicznych hoteli dla miasta zaokr¹glone do drugiej liczby po przecinku wraz z nazw¹ miasta.
-SELECT nazwa_miasta, ROUND(AVG(cena_za_polaczenie_telefoniczne) OVER (PARTITION BY nazwa_miasta), 2) as 'Srednia cena polaczen telefonicznych'
+--3. Wyœwietlenie œredniej ceny po³¹czeñ telefonicznych hoteli dla miasta zaokr¹glone do drugiej liczby po przecinku wraz z nazw¹ miasta, posortowanych po œredniej.
+SELECT DISTINCT nazwa_miasta, ROUND(AVG(cena_za_polaczenie_telefoniczne) OVER (PARTITION BY nazwa_miasta), 2) as 'Srednia cena polaczen telefonicznych'
 FROM hotel h, miasto m
 WHERE h.id_miasta = m.id_miasta
-ORDER BY m.nazwa_miasta
+ORDER BY [Srednia cena polaczen telefonicznych] DESC
 
 --4. Zlicz w ilu krajach s¹ rozmieszczone hotele.
 SELECT COUNT(DISTINCT m.nazwa_kraju) FROM miasto m, hotel h
@@ -126,7 +126,6 @@ ORDER BY nazwa_kraju DESC
 SELECT COUNT(id_pokoju) FROM pokoj
 WHERE id_pokoju NOT IN (SELECT id_pokoju FROM rezerwacja)
 
-
 -- 7. Wyœwietl piêæ najbli¿szych rezerwacji. 
 WITH zwroc_5_najblizszych_rezerwacji
 AS
@@ -139,7 +138,7 @@ AS
 SELECT * FROM zwroc_5_najblizszych_rezerwacji
 GO
 
--- 8. Wyœwietl wszystkie reerwacje (id_rezerwacji, dat_rezerwacji, liczba_dni_rezerwacji) dla klienta o nazwisku Kowalczyk.
+-- 8. Wyœwietl wszystkie rezerwacje (id_rezerwacji, dat_rezerwacji, liczba_dni_rezerwacji) dla klienta o nazwisku Kowalczyk.
 SELECT id_rezerwacji, data_rezerwacji, liczba_dni_rezerwacji
 FROM rezerwacja r, klient k
 WHERE r.id_klienta = k.id_klienta AND k.nazwisko_klienta = 'KOWALCZYK'
@@ -147,7 +146,7 @@ GROUP BY data_rezerwacji, id_rezerwacji, liczba_dni_rezerwacji
 ORDER BY data_rezerwacji ASC
 GO
 
--- 9. Wyœwietl wszystkie us³ugi, które s¹ zarejestrowane dla rezerwacji dla klienta o nazwisku 'Dudziak'
+-- 9. Wyœwietl wszystkie us³ugi, które s¹ zarejestrowane dla rezerwacji dla klienta o nazwisku 'Dudziak'. 
 SELECT DISTINCT u.nazwa_uslugi FROM usluga u, usluga_dla_rezerwacji ur, klient k, rezerwacja r
 WHERE ur.id_uslugi = u.id_uslugi
 AND ur.id_rezerwacji = r.id_rezerwacji
@@ -190,7 +189,8 @@ WHERE DATEDIFF(MINUTE, godzina_rozpoczecia_rozmowy, CAST(data_zakonczenia_rozmow
 SELECT id_rezerwacji, data_rezerwacji FROM rezerwacja 
 WHERE data_rezerwacji > CONVERT(DATE, '2020/08/15')
 
--- 18. Wyœwietl wszystkich klientów, których numer telefonu zaczyna siê od liczby '6' i koñczy siê na liczbê 2, ich imiê i nazwisko po³¹cz w jednej kolumnie o nazwie imie_i_nazwisko. 
+-- 18. Wyœwietl wszystkich klientów, których numer telefonu zaczyna siê od liczby '6' i koñczy siê na liczbê 2, ich imiê i nazwisko po³¹cz w jednej kolumnie 
+-- o nazwie imie_i_nazwisko. 
 SELECT CONCAT(imie_klienta, ' ', nazwisko_klienta) AS imie_i_nazwisko, numer_telefonu_klienta FROM klient
 WHERE numer_telefonu_klienta LIKE '6%2'
 
@@ -198,17 +198,14 @@ WHERE numer_telefonu_klienta LIKE '6%2'
 UPDATE hotel
 SET cena_bazowa_za_pokoj = 1.05 * cena_bazowa_za_pokoj
 
---19. Utwórz pust¹ tabelê archiwum_rezerwacji na podstawie tabeli rezerwacja pomijaj¹c kolumnê id_rezerwacji. 
+--20. Utwórz pust¹ tabelê archiwum_rezerwacji na podstawie tabeli rezerwacja pomijaj¹c kolumnê id_rezerwacji. 
 SELECT id_pokoju, id_klienta, liczba_dni_rezerwacji, data_rezerwacji INTO archiwum_rezerwacji 
 FROM rezerwacja
 WHERE 1 = 0
 GO
 
---20. Dodaj do tabeli archiwum_rezerwacji kolumnê cena_rezerwacji typu ca³kowitego oraz kolumnê id_rezerwacji_arch typu ca³kowitego przyrostowego 
--- od 10000 co 1 bêd¹ca kluczem g³ównym. Na kolumny za³ó¿ ograniczenia takie jak przy tabeli rezerwacja, przy czym data_rezerwacji musi byæ przed aktualn¹ dat¹.
--- W tabeli rezerwacja zdejmij restrykcjê dotycz¹c¹ daty rezerwacji (data_rezerwacji musi byæ dat¹ póŸniejsz¹ ni¿ aktualna data). W tabeli rezerwacja zdejmij
--- restrykcjê dotycz¹c¹ daty rezerwacji (data_rezerwacji musi byæ dat¹ póŸniejsz¹ ni¿ aktualna data). Dodaj do tabeli rezerwacja 6 rekordy z dat¹ rezerwacji, 
--- która ju¿ siê odby³a. Dla nowo utworzonych rezerwacji dodaj us³ugi. Przenieœ z tabeli rezerwacja te rekordy, które maja przesz³¹ datê do tabeli archiwum_rezerwacji. 
+--21. Dodaj do tabeli archiwum_rezerwacji kolumnê id_rezerwacji typu ca³kowitego unikatowego oraz cena_rezerwacji typu ca³kowitego oraz kolumnê id_rezerwacji_arch 
+-- typu ca³kowitego przyrostowego od 10000 co 1 bêd¹ca kluczem g³ównym. 
 ALTER TABLE archiwum_rezerwacji
 ADD id_rezerwacji INT UNIQUE
 GO
@@ -218,6 +215,9 @@ ADD cena_rezerwacji INT,
 	id_rezerwacji_arch INT PRIMARY KEY IDENTITY(1000, 1)
 GO
 
+--22. Na kolumny za³ó¿ ograniczenia takie jak przy tabeli rezerwacja, przy czym data_rezerwacji musi byæ przed aktualn¹ dat¹.
+-- W tabeli rezerwacja zdejmij restrykcjê dotycz¹c¹ daty rezerwacji (data_rezerwacji musi byæ dat¹ póŸniejsz¹ ni¿ aktualna data). 
+-- Dodaj do tabeli rezerwacja 6 rekordy z dat¹ rezerwacji, która ju¿ siê odby³a. Dla nowo utworzonych rezerwacji dodaj us³ugi. 
 ALTER TABLE archiwum_rezerwacji 
 ADD CONSTRAINT check_liczba_dni_rezerwacji_arch CHECK (liczba_dni_rezerwacji > 0),
 	CONSTRAINT check_data_rezerwacji_arch CHECK (data_rezerwacji < GETDATE()),
@@ -255,12 +255,13 @@ INSERT INTO usluga_dla_rezerwacji VALUES (3, 1037);
 INSERT INTO usluga_dla_rezerwacji VALUES (6, 1037);
 GO
 
+-- 23. Przenieœ z tabeli rezerwacja te rekordy, które maja przesz³¹ datê do tabeli archiwum_rezerwacji. 
 INSERT INTO archiwum_rezerwacji (id_pokoju, id_klienta, liczba_dni_rezerwacji, data_rezerwacji, id_rezerwacji)
 SELECT id_pokoju, id_klienta, liczba_dni_rezerwacji, data_rezerwacji, id_rezerwacji FROM rezerwacja
 WHERE data_rezerwacji < GETDATE()
 GO
 
---21. Dodaj synonim dla tabeli archiwum_rezerwacji ustawiaj¹c jego wartoœæ na arch oraz dla tabeli rozmowy_telefoniczne na wartoœæ tel. 
+--24. Dodaj synonim dla tabeli archiwum_rezerwacji ustawiaj¹c jego wartoœæ na arch oraz dla tabeli rozmowy_telefoniczne na wartoœæ tel. 
 -- W tabeli archiwum_rezerwacji ustaw wartoœci kolumny cena_rezerwacji na wartoœæ iloczynu cena_bazowa_za_pokoj razy liczba_dni_rezerwacji.
 CREATE SYNONYM arch FOR archiwum_rezerwacji;
 CREATE SYNONYM tel FOR rozmowy_telefoniczne;
@@ -272,13 +273,10 @@ WHERE a.id_pokoju = p.id_pokoju
 	AND p.id_hotelu = h.id_hotelu
 GO
 
---22. Dodaj funkcjê zwracaj¹c¹ wspó³czynnik z jakim trzeba bêdzie pomno¿yæ cenê za po³¹czenie telefoniczne. Funkcja ma przyjmowaæ dwa argumenty: 
+--25. Dodaj funkcjê zwracaj¹c¹ wspó³czynnik z jakim trzeba bêdzie pomno¿yæ cenê za po³¹czenie telefoniczne. Funkcja ma przyjmowaæ dwa argumenty: 
 -- numer_telefonu, id_pokoju. Jeœli numer telefonu, na który zosta³o wykonane po³¹czenie nale¿y do któregoœ z pokoi w hotelu z którego wykonano po³¹czenie 
 -- (na podstawie id_pokoju uzyskujemy id_hotelu z którego wykonano po³¹czenie) wtedy wspó³czynnik ustawiany jest na 0. Dla numeru telefonu pokoju znajduj¹cego 
--- siê w innym hotelu wspó³czynnik ustawiany jest na 0.5, dla numerów telefonów spoza hotelu wspó³czynnik ustawiany jest na 1. Dodaj do tabeli rezerwacja kolumnê 
--- cena_za_telefon typu zmiennoprzecinkowego z dwoma miejscami po przecinku. Wstaw do nowo utworzonej kolumny cena_za_polaczenie_telefoniczne pomno¿on¹ przez 
--- ró¿nicê minut pomiêdzy godzin¹ rozpoczêcia a godzin¹ zakoñczenia rozmowy. 
-
+-- siê w innym hotelu wspó³czynnik ustawiany jest na 0.5, dla numerów telefonów spoza hotelu wspó³czynnik ustawiany jest na 1. 
 CREATE OR ALTER FUNCTION oblicz_wspoczynnik 
 (
 	@numer_telefonu VARCHAR(9), 
@@ -306,12 +304,12 @@ AS BEGIN
 END; 
 GO
 
+-- 26. Dodaj do tabeli rezerwacja kolumnê cena_za_telefon typu zmiennoprzecinkowego z dwoma miejscami po przecinku. Wstaw do nowo utworzonej kolumny 
+-- cena_za_polaczenie_telefoniczne pomno¿on¹ przez ró¿nicê minut pomiêdzy godzin¹ rozpoczêcia a godzin¹ zakoñczenia rozmowy razy cena_za_polaczenie_telefoniczne
+-- razy wspolczynnik obliczony na podstawie funkcji oblicz_wspolczynnik. 
 ALTER TABLE archiwum_rezerwacji
 ADD cena_za_telefon FLOAT(2)
 GO
-
-DELETE FROM rozmowy_telefoniczne
-WHERE id_pokoju IN (SELECT id_pokoju FROM arch)
 
 UPDATE arch
 SET cena_za_telefon = t.suma_cen
@@ -326,7 +324,11 @@ FROM
     ) t
 WHERE t.id_pokoju = arch.id_pokoju
 
---23. Dodaj do tabeli archiwum_rezerwacji kolumnê cena_za_uslugi typu zmiennoprzecinkowego z dwoma miejscami po przecinku. 
+-- 27. Usuñ z tabeli rozmowy_telefoniczne wszystkie rozmowy, które by³y wykonane z pokoi, których id znajduje siê w tabeli o synonimie arch. 
+DELETE FROM rozmowy_telefoniczne
+WHERE id_pokoju IN (SELECT id_pokoju FROM arch)
+
+--28. Dodaj do tabeli archiwum_rezerwacji kolumnê cena_za_uslugi typu zmiennoprzecinkowego z dwoma miejscami po przecinku. 
 -- Wstaw do nowo utworzonej kolumny  cena_uslugi pomno¿on¹ razy liczba_dni_rezerwacji.
 ALTER TABLE archiwum_rezerwacji
 ADD cena_za_uslugi FLOAT(2)
@@ -345,8 +347,8 @@ FROM
 WHERE t.id_rezerwacji = arch.id_rezerwacji
 GO
 
---24. Usuñ z tabeli  usluga_dla_rezerwacji wszystkie rekordy dla rejestracji z przesz³¹ dat¹. Usuñ z tabeli rezerwacja wszystkie rekordy, które maj¹ przesz³¹ datê 
--- rezerwacji. Na³ó¿ ponownie restrykcjê na tabelê rezerwacja by data_rezerwacji mog³a byæ tylko dat¹ póŸniejsz¹ ni¿ aktualna data. 
+--29. Usuñ z tabeli  usluga_dla_rezerwacji wszystkie rekordy dla rejestracji z przesz³¹ dat¹. Usuñ z tabeli rezerwacja wszystkie rekordy, które maj¹ przesz³¹ datê 
+-- rezerwacji. Na³ó¿ ponownie restrykcjê na tabelê rezerwacja, by data_rezerwacji mog³a byæ tylko dat¹ póŸniejsz¹ ni¿ aktualna data. 
 DELETE FROM usluga_dla_rezerwacji WHERE id_rezerwacji IN (SELECT id_rezerwacji FROM rezerwacja WHERE data_rezerwacji < GETDATE())
 GO
 
@@ -357,8 +359,7 @@ ALTER TABLE rezerwacja
 ADD CONSTRAINT check_data_rezerwacji CHECK (data_rezerwacji > GETDATE());
 GO
 
---25. We wszystkich trzech nowo wprowadzonych kolumnach zamien NULL na 0.Dodaj do tabeli archiwum_rezerwacji kolumnê cena_calkowita typu zmiennoprzecinkowego 
--- z dwoma miejscami po przecinku. Wstaw do nowo utworzonej kolumny sumê kolumn cena_za_uslugi, cena_za_telefon, cena_rezerwacji. 
+--30. We wszystkich trzech nowo wprowadzonych kolumnach zamien NULL na 0.
 UPDATE arch
 SET cena_rezerwacji = 0
 FROM arch
@@ -377,6 +378,9 @@ FROM arch
 WHERE cena_za_uslugi IS NULL
 GO
 
+-- 31. Dodaj do tabeli archiwum_rezerwacji kolumnê cena_calkowita typu zmiennoprzecinkowego z dwoma miejscami po przecinku. 
+-- Wstaw do nowo utworzonej kolumny sumê kolumn cena_za_uslugi, cena_za_telefon, cena_rezerwacji. 
+
 ALTER TABLE archiwum_rezerwacji
 ADD cena_calkowita FLOAT(2)
 GO
@@ -387,13 +391,13 @@ FROM arch
 SELECT * FROM arch
 GO
 
--- 26. Wyœwietl 3 hotele, które zarobi³y najwiêcej na dotychczasowych rezerwacjach. 
+-- 32. Wyœwietl 3 hotele, które zarobi³y najwiêcej na dotychczasowych rezerwacjach. 
 SELECT TOP 3 h.nazwa_hotelu, ROUND(SUM(a.cena_calkowita), 2) AS zarobki FROM arch a, pokoj p, hotel h
 WHERE a.id_pokoju = p.id_pokoju
 AND p.id_hotelu = h.id_hotelu
 GROUP BY h.nazwa_hotelu
 
--- 27. Wyœwietl ile ka¿dy klient zap³aci³ za rezerwacje, które jak dot¹d siê odby³y. Na koñcu dodaj podsumowanie ile ³¹cznie wydali klienci. 
+-- 33. Wyœwietl ile ka¿dy klient zap³aci³ za rezerwacje, które jak dot¹d siê odby³y. Na koñcu dodaj podsumowanie ile ³¹cznie wydali klienci. 
 SELECT k.id_klienta, ROUND(SUM(a.cena_calkowita), 2) AS wydatki FROM arch a, klient k
 WHERE a.id_klienta = k.id_klienta
 GROUP BY ROLLUP(k.id_klienta)
