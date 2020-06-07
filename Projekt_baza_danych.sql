@@ -238,6 +238,9 @@ ALTER TABLE archiwum_rezerwacji
 ADD cena_za_telefon FLOAT(2)
 GO
 
+DELETE FROM rozmowy_telefoniczne
+WHERE id_pokoju IN (SELECT id_pokoju FROM arch)
+
 UPDATE arch
 SET cena_za_telefon = t.suma_cen
 FROM 
@@ -362,8 +365,36 @@ ORDER BY id_rezerwacji
 SELECT id_sprzatania, id_pokoju, CAST((data_zakonczenia_sprzatania - data_rozpoczecia_sprzatania) AS TIME(0)) AS czas_trwania FROM sprzatanie
 WHERE rodzaj_sprzatania = 'Pelne'
 
+-- 22. Wyœwietl nazwê hotelu, nazwê miasta, nazwê pañstwa dla hoteli, które maj¹ iloœæ zarejestrowanych pokoi wiêksz¹ ni¿ 5.
+SELECT h.nazwa_hotelu, m.nazwa_miasta, m.nazwa_kraju FROM hotel h, miasto m
+WHERE h.id_miasta = m.id_miasta
+AND (SELECT COUNT(id_pokoju) FROM pokoj p WHERE p.id_hotelu = h.id_hotelu) > 5
 
-SELECT * FROM pokoj
+-- 23. Wyœwietl wszystkie rozmowy telefoniczne, które trwa³y d³u¿ej ni¿ 5 minut.
+SELECT * FROM rozmowy_telefoniczne rt
+WHERE DATEDIFF(MINUTE, godzina_rozpoczecia_rozmowy, CAST(data_zakonczenia_rozmowy AS TIME)) > 5
+
+-- 24. Wyœwietl ile ka¿dy z hoteli zarobi³ na dotychczasowych rezerwacjach. 
+SELECT h.nazwa_hotelu, ROUND(SUM(a.cena_calkowita), 2) AS zarobki FROM arch a, pokoj p, hotel h
+WHERE a.id_pokoju = p.id_pokoju
+AND p.id_hotelu = h.id_hotelu
+GROUP BY h.nazwa_hotelu
+
+-- 25. Wyœwietl ile ka¿dy klient zap³aci³ za rezerwacje, które jak dot¹d siê odby³y. 
+SELECT k.id_klienta, ROUND(SUM(a.cena_calkowita), 2) AS wydatki FROM arch a, klient k
+WHERE a.id_klienta = k.id_klienta
+GROUP BY k.id_klienta
+
+-- 26. Wyœwietl id_rezerwacji oraz data_rezerwacji dla wszystkich rezerwacji odbywaj¹cych siê po 15 sierpnia 2020 roku. 
+SELECT id_rezerwacji, data_rezerwacji FROM rezerwacja 
+WHERE data_rezerwacji > CONVERT(DATE, '2020/08/15')
+
+-- 27. Wyœwietl wszystkich klientów, których numer telefonu zaczyna siê od liczby '6' i koñczy siê na liczbê 2, ich imiê i nazwisko po³¹cz w jednej kolumnie o nazwie imie_i_nazwisko. 
+SELECT CONCAT(imie_klienta, ' ', nazwisko_klienta) AS imie_i_nazwisko, numer_telefonu_klienta FROM klient
+WHERE numer_telefonu_klienta LIKE '6%2'
+
+
+SELECT * FROM arch
 SELECT * FROM rezerwacja
 SELECT * FROM klient
-SELECT * FROM sprzatanie
+SELECT * FROM rozmowy_telefoniczne
