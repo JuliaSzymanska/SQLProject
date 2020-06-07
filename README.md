@@ -3,7 +3,7 @@
 Baza danych systemu zarządzania hotelami. 
 
 ## Diagram
-![Przed_zapytaniami.png](https://github.com/JuliaSzymanska/SQLProject/blob/master/Przed_zapytaniami.png)
+![Po_zapytaniach.png](https://github.com/JuliaSzymanska/SQLProject/blob/master/Po_zapytaniach.png)
 
 ## Założenia
 1.	Hotele zlokalizowane są w różnych miastach, różnych państw. 
