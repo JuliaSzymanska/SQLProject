@@ -2,7 +2,7 @@
 
 Baza danych systemu zarządzania hotelami. 
 
-## Założenia
+### Założenia
 1.	Hotele zlokalizowane są w różnych miastach, różnych państw. 
 2.	W jednym mieście może znajdować się wiele hoteli tej samej sieci. 
 3.	W każdym hotelu znajduje się wiele pokoi. 
@@ -15,7 +15,7 @@ Baza danych systemu zarządzania hotelami.
 10.	Rozmowy wykonywane przez telefon hotelowy są rejestrowane. Zapisywana jest data wykonania połączenia wraz z godziną rozpoczęcia i godziną zakończenia, numer telefonu, na który wykonano połączenie oraz id pokoju.  Przy nowej rezerwacji pokoju, rozmowy dla tego pokoju są zerowane.
 11.	Rozmowy wykonane przez telefon hotelowy są płatne z ustaloną z góry ceną dla każdego hotelu inną. Połączenia wewnątrz hotelu (z innym pokojem w tym hotelu) są darmowe. Połączenia z innymi hotelami są płatne ze zniżką 50%, pozostałe połączenia są w pełni płatne. 
 
-## Tabele
+### Tabele
 * Miasto
 * Hotel
 * Pokój
