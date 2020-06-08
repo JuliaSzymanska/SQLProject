@@ -75,6 +75,7 @@ INSERT INTO pokoj VALUES (110, 3, '92435', 4, 3);
 INSERT INTO pokoj VALUES (110, 4, '98733', 2, 2);
 INSERT INTO pokoj VALUES (110, 5, '98235', 6, 5);
 INSERT INTO pokoj VALUES (110, 6, '98764', 4, 3);
+INSERT INTO pokoj VALUES (110, 7, '25975', 2, 4);
 INSERT INTO pokoj VALUES (111, 1, '91246', 3, 3);
 INSERT INTO pokoj VALUES (111, 2, '19235', 4, 5);
 INSERT INTO pokoj VALUES (111, 3, '56934', 6, 5);
@@ -116,7 +117,7 @@ INSERT INTO klient VALUES ('Mariusz', 'Adamczyk', '995432511', 'Palacowa 156 13-
 INSERT INTO klient VALUES ('Jozef', 'Spychala', '593857201', 'Wroclawska 14 34-234 Lodz Polska', '591857205');
 INSERT INTO klient VALUES ('Malgorzata', 'Wawrzyniak', '978572054', 'Letnia 141 49-546 Plock Polska', '504968593');
 INSERT INTO klient VALUES ('Agnieszka', 'Dudziak', '597416754', 'Lawinowa 98 43-175 Pilica Polska', '495938574');
-INSERT INTO klient VALUES ('Robert', 'Szukal', '687948372', 'Potokowa 65 15-865 Gdansk Polska', '6839204918');
+INSERT INTO klient VALUES ('Robert', 'Szukal', '687948372', 'Potokowa 65 15-865 Gdansk Polska', '683920498');
 INSERT INTO klient VALUES ('Klaudia', 'Kulesza', '497810692', 'Sobieskiego 24a 31-136 Krakow Polska', '594810693');
 INSERT INTO klient VALUES ('Anne', 'Kiff', '343255631', 'Fine St 111 3-432 London Wielka Brytania', '657294382');
 INSERT INTO klient VALUES ('James', 'Black', '681059481', 'Halo St 45 6-342 London Wielka Brytania', '596840123');
@@ -125,7 +126,7 @@ INSERT INTO klient VALUES ('Julia', 'Wood', '504938654', 'Aldershot St 123 5-876
 INSERT INTO klient VALUES ('Goerge', 'Twain', '486859302', 'Independency St 76 8-972 Liverpool Wielka Brytania', '594067206');
 INSERT INTO klient VALUES ('Stefano', 'Umber', '203589431', 'Santa 34 1-451 Madrit Hiszpania', '653254324');
 INSERT INTO klient VALUES ('Daniel', 'Norte', '932363454', 'Ajedrez 12 3-543 Madrit Hiszpania', '645463345');
-INSERT INTO klient VALUES ('Elena', 'Este', '872341421', 'Santa 56 1-451 Alicante Hiszpania', '653254324');
+INSERT INTO klient VALUES ('Elena', 'Este', '872341421', 'Santa 56 1-451 Alicante Hiszpania', '633254324');
 INSERT INTO klient VALUES ('Sara', 'Cine', '432095032', 'Granizar 1 6-173 Bilbao Hiszpania', '620398426');
 INSERT INTO klient VALUES ('David', 'Acobar', '746841769', 'Hellar 343 1-451 Grenada Hiszpania', '583748694');
 INSERT INTO klient VALUES ('Remedioz', 'Sol', '584736749', 'Julio 153 1-451 Sevilla Hiszpania', '693654218');
@@ -133,7 +134,7 @@ INSERT INTO klient VALUES ('Jose', 'Rodrigez', '591853201', 'Pueblo 12 1-451 Bar
 INSERT INTO klient VALUES ('Michael', 'Alexis', '496849212', 'Benevoles 675 23-561 Paris Francja', '594857301');
 INSERT INTO klient VALUES ('Irene', 'Desirre', '496857206', 'Apprivoiser 80 21-496 Paris Francja', '506957335');
 INSERT INTO klient VALUES ('Gabriele', 'Calin', '406958473', 'Frotter 1 67-797 Tuluza Francja', '607958342');
-INSERT INTO klient VALUES ('Dolorez', 'Ambriage', '496830123', 'Kine 57 54-876 Nantes Francja', '5069482354');
+INSERT INTO klient VALUES ('Dolorez', 'Ambriage', '496830123', 'Kine 57 54-876 Nantes Francja', '506942354');
 SELECT * FROM klient
 
 INSERT INTO rezerwacja VALUES (101, 1000, 5, '2020/12/25');

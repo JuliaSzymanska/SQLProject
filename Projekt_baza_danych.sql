@@ -15,7 +15,7 @@ adres_hotelu VARCHAR(100) NOT NULL,
 cena_bazowa_za_pokoj INT NOT NULL,
 cena_za_polaczenie_telefoniczne FLOAT(2) NOT NULL,
 CONSTRAINT check_cena_bazowa_za_pokoj CHECK (cena_bazowa_za_pokoj > 0),
-CONSTRAINT cena_za_polaczenie_telefoniczne CHECK (cena_za_polaczenie_telefoniczne > 0)
+CONSTRAINT check_cena_za_polaczenie_telefoniczne CHECK (cena_za_polaczenie_telefoniczne > 0)
 );
 GO
 
@@ -46,8 +46,8 @@ imie_klienta VARCHAR(20),
 nazwisko_klienta VARCHAR(40) NOT NULL, 
 pesel_klienta CHAR(9) NOT NULL,
 adres_zamieszkania VARCHAR(100) NOT NULL,
-numer_telefonu_klienta CHAR(9) UNIQUE,
-CONSTRAINT check_pesel CHECK (pesel_klienta LIKE '[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9)'),
+numer_telefonu_klienta CHAR(9) UNIQUE NOT NULL,
+CONSTRAINT check_pesel_klienta CHECK (pesel_klienta LIKE '[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9)'),
 CONSTRAINT check_numer_telefonu_klienta CHECK (numer_telefonu_klienta LIKE '[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'),
 );
 GO
@@ -78,7 +78,7 @@ data_rozpoczecia_sprzatania DATETIME NOT NULL,
 data_zakonczenia_sprzatania DATETIME DEFAULT GETDATE(), 
 rodzaj_sprzatania VARCHAR(10),
 CONSTRAINT check_data_sprzatania CHECK (data_rozpoczecia_sprzatania < data_zakonczenia_sprzatania),
-CONSTRAINT check_data_zakonczenia_sprzatania CHECK (data_zakonczenia_sprzatania < GETDATE()),
+CONSTRAINT check_data_zakonczenia_sprzatania CHECK (data_zakonczenia_sprzatania <= GETDATE()),
 CONSTRAINT check_rodzaj_sprzatania CHECK (UPPER(rodzaj_sprzatania) IN ('PODSTAWOWE', 'PELNE'))
 );
 GO
@@ -90,55 +90,52 @@ numer_telefonu VARCHAR(9) NOT NULL,
 godzina_rozpoczecia_rozmowy TIME NOT NULL,
 data_zakonczenia_rozmowy DATETIME DEFAULT GETDATE(),
 CONSTRAINT check_data_rozmowy CHECK (godzina_rozpoczecia_rozmowy < cast(data_zakonczenia_rozmowy as time(0))),
-CONSTRAINT check_data_zakonczenia_rozmowy CHECK (data_zakonczenia_rozmowy < GETDATE()),
+CONSTRAINT check_data_zakonczenia_rozmowy CHECK (data_zakonczenia_rozmowy <= GETDATE()),
 CONSTRAINT check_numer_telefonu_rozmowcy CHECK (numer_telefonu NOT LIKE '%^(0-9)%')
 );
 GO
 
 
---1. Wyœwietlenie liczby pokoi w ka¿dym z hoteli. Na koñcu dodaj podstumowanie ile jest ³¹cznie pokoi. 
+--1. Wyœwietl liczbê pokoi w ka¿dym z hoteli. Na koñcu dodaj podsumowanie ile jest ³¹cznie pokoi. 
 SELECT COUNT(*) as 'Liczba pokoi', nazwa_hotelu FROM pokoj p, hotel h
 WHERE p.id_hotelu = h.id_hotelu
 GROUP BY ROLLUP(nazwa_hotelu)
+ORDER BY [Liczba pokoi]
 
---2. Wyœwietlenie nazwy hotelu, ceny bazowej za pokój, nazwa miasta przy tworzeniu rankingu hoteli na podstawie cen pokoi bez przeskoku. 
+--2. Wyœwietl nazwê hotelu, cenê bazow¹ za pokój, nazwê miasta przy tworzeniu rankingu hoteli na podstawie ceny bazowej za 
+-- pokój bez przeskoku.  
 SELECT nazwa_hotelu, cena_bazowa_za_pokoj, nazwa_miasta,
 DENSE_RANK() OVER (ORDER BY cena_bazowa_za_pokoj DESC) AS 'Ranking cen pokoi'
 FROM hotel h, miasto m
 WHERE h.id_miasta = m.id_miasta
 
---3. Wyœwietlenie œredniej ceny po³¹czeñ telefonicznych hoteli dla miasta zaokr¹glone do drugiej liczby po przecinku wraz z nazw¹ miasta, posortowanych po œredniej.
+--3. Wyœwietl œredni¹ cenê po³¹czeñ telefonicznych hoteli dla miasta zaokr¹glone do drugiej liczby po przecinku wraz z nazw¹ miasta, 
+-- posortowane po œredniej.
 SELECT DISTINCT nazwa_miasta, ROUND(AVG(cena_za_polaczenie_telefoniczne) OVER (PARTITION BY nazwa_miasta), 2) as 'Srednia cena polaczen telefonicznych'
 FROM hotel h, miasto m
 WHERE h.id_miasta = m.id_miasta
 ORDER BY [Srednia cena polaczen telefonicznych] DESC
 
 --4. Zlicz w ilu krajach s¹ rozmieszczone hotele.
-SELECT COUNT(DISTINCT m.nazwa_kraju) FROM miasto m, hotel h
+SELECT COUNT(DISTINCT m.nazwa_kraju) as 'Liczba krajów' FROM miasto m, hotel h
 WHERE h.id_miasta = m.id_miasta
 
--- 5. Wyœwietl nazwy kraji, w których zlokalizowane s¹ hotele posortowane malej¹co. 
+-- 5. Wyœwietl nazwy krajów, w których zlokalizowane s¹ hotele posortowane malej¹co. 
 SELECT DISTINCT m.nazwa_kraju FROM miasto m, hotel h
 WHERE h.id_miasta = m.id_miasta
 ORDER BY nazwa_kraju DESC
 
 -- 6. Wyœwietl liczbê pokoi dla których nie przewidziano rezerwacji. 
-SELECT COUNT(id_pokoju) FROM pokoj
+SELECT COUNT(id_pokoju) as 'Liczba pokoi bez rezerwacji' FROM pokoj
 WHERE id_pokoju NOT IN (SELECT id_pokoju FROM rezerwacja)
 
 -- 7. Wyœwietl piêæ najbli¿szych rezerwacji. 
-WITH zwroc_5_najblizszych_rezerwacji
-AS
-(
-    SELECT top 5 id_rezerwacji, data_rezerwacji, liczba_dni_rezerwacji
-    FROM rezerwacja
-	GROUP BY data_rezerwacji, id_rezerwacji, liczba_dni_rezerwacji
-    ORDER BY data_rezerwacji ASC
-)
-SELECT * FROM zwroc_5_najblizszych_rezerwacji
-GO
+SELECT top 5 id_rezerwacji, data_rezerwacji, liczba_dni_rezerwacji
+FROM rezerwacja
+GROUP BY data_rezerwacji, id_rezerwacji, liczba_dni_rezerwacji
+ORDER BY data_rezerwacji ASC
 
--- 8. Wyœwietl wszystkie rezerwacje (id_rezerwacji, dat_rezerwacji, liczba_dni_rezerwacji) dla klienta o nazwisku Kowalczyk.
+-- 8. Wyœwietl wszystkie rezerwacje (id_rezerwacji, data_rezerwacji, liczba_dni_rezerwacji) dla klienta o nazwisku Kowalczyk.
 SELECT id_rezerwacji, data_rezerwacji, liczba_dni_rezerwacji
 FROM rezerwacja r, klient k
 WHERE r.id_klienta = k.id_klienta AND k.nazwisko_klienta = 'KOWALCZYK'
@@ -161,7 +158,7 @@ WHERE imie_klienta LIKE '%a'
 SELECT imie_klienta, nazwisko_klienta, adres_zamieszkania FROM klient
 WHERE adres_zamieszkania LIKE '%Hiszpania%'
 
--- 12. Wyœwietl id_rezerwacji, oraz licza_dni_rezerwacji, data_rezerwacji oraz datê wymeldowania jako data_wymeldowania. 
+-- 12. Wyœwietl id_rezerwacji, licza_dni_rezerwacji, data_rezerwacji oraz datê wymeldowania jako data_wymeldowania. 
 SELECT id_rezerwacji, liczba_dni_rezerwacji, data_rezerwacji, DATEADD(DAY, liczba_dni_rezerwacji, data_rezerwacji) AS data_wymeldowania
 FROM rezerwacja
 ORDER BY liczba_dni_rezerwacji
@@ -177,7 +174,7 @@ SELECT id_sprzatania, id_pokoju, CAST((data_zakonczenia_sprzatania - data_rozpoc
 WHERE rodzaj_sprzatania = 'Pelne'
 
 -- 15. Wyœwietl nazwê hotelu, nazwê miasta, nazwê pañstwa dla hoteli, które maj¹ iloœæ zarejestrowanych pokoi wiêksz¹ ni¿ 5.
-SELECT h.nazwa_hotelu, m.nazwa_miasta, m.nazwa_kraju FROM hotel h, miasto m
+SELECT h.nazwa_hotelu, m.nazwa_miasta, m.nazwa_kraju, (SELECT COUNT(id_pokoju) FROM pokoj p WHERE p.id_hotelu = h.id_hotelu) as liczba_pokoi FROM hotel h, miasto m
 WHERE h.id_miasta = m.id_miasta
 AND (SELECT COUNT(id_pokoju) FROM pokoj p WHERE p.id_hotelu = h.id_hotelu) > 5
 
@@ -189,8 +186,8 @@ WHERE DATEDIFF(MINUTE, godzina_rozpoczecia_rozmowy, CAST(data_zakonczenia_rozmow
 SELECT id_rezerwacji, data_rezerwacji FROM rezerwacja 
 WHERE data_rezerwacji > CONVERT(DATE, '2020/08/15')
 
--- 18. Wyœwietl wszystkich klientów, których numer telefonu zaczyna siê od liczby '6' i koñczy siê na liczbê 2, ich imiê i nazwisko po³¹cz w jednej kolumnie 
--- o nazwie imie_i_nazwisko. 
+-- 18. Wyœwietl wszystkich klientów, których numer telefonu zaczyna siê od liczby '6' i koñczy siê na liczbê 2, ich imiê i nazwisko 
+-- po³¹cz w jednej kolumnie o nazwie imie_i_nazwisko. 
 SELECT CONCAT(imie_klienta, ' ', nazwisko_klienta) AS imie_i_nazwisko, numer_telefonu_klienta FROM klient
 WHERE numer_telefonu_klienta LIKE '6%2'
 
@@ -304,9 +301,9 @@ AS BEGIN
 END; 
 GO
 
--- 26. Dodaj do tabeli rezerwacja kolumnê cena_za_telefon typu zmiennoprzecinkowego z dwoma miejscami po przecinku. Wstaw do nowo utworzonej kolumny 
--- cena_za_polaczenie_telefoniczne pomno¿on¹ przez ró¿nicê minut pomiêdzy godzin¹ rozpoczêcia a godzin¹ zakoñczenia rozmowy razy cena_za_polaczenie_telefoniczne
--- razy wspolczynnik obliczony na podstawie funkcji oblicz_wspolczynnik. 
+-- 26. Dodaj do tabeli rezerwacja kolumnê cena_za_telefon typu zmiennoprzecinkowego z dwoma miejscami po przecinku. Wstaw do nowo 
+-- utworzonej kolumny cena_za_polaczenie_telefoniczne pomno¿on¹ przez ró¿nicê minut pomiêdzy godzin¹ rozpoczêcia a godzin¹ zakoñczenia
+-- rozmowy razy cena_za_polaczenie_telefoniczne razy wspo³czynnik obliczony na podstawie funkcji oblicz_wspolczynnik. 
 ALTER TABLE archiwum_rezerwacji
 ADD cena_za_telefon FLOAT(2)
 GO
@@ -329,13 +326,13 @@ DELETE FROM rozmowy_telefoniczne
 WHERE id_pokoju IN (SELECT id_pokoju FROM arch)
 
 --28. Dodaj do tabeli archiwum_rezerwacji kolumnê cena_za_uslugi typu zmiennoprzecinkowego z dwoma miejscami po przecinku. 
--- Wstaw do nowo utworzonej kolumny  cena_uslugi pomno¿on¹ razy liczba_dni_rezerwacji.
+-- Wstaw do nowo utworzonej kolumny cena_uslugi pomno¿on¹ razy liczba_dni_rezerwacji.
 ALTER TABLE archiwum_rezerwacji
 ADD cena_za_uslugi FLOAT(2)
 GO
 
 UPDATE arch
-SET cena_za_uslugi = t.suma_cen
+SET cena_za_uslugi = t.suma_cen * liczba_dni_rezerwacji
 FROM 
     (
         SELECT ur.id_rezerwacji ,SUM(u.cena_uslugi) suma_cen
@@ -380,7 +377,6 @@ GO
 
 -- 31. Dodaj do tabeli archiwum_rezerwacji kolumnê cena_calkowita typu zmiennoprzecinkowego z dwoma miejscami po przecinku. 
 -- Wstaw do nowo utworzonej kolumny sumê kolumn cena_za_uslugi, cena_za_telefon, cena_rezerwacji. 
-
 ALTER TABLE archiwum_rezerwacji
 ADD cena_calkowita FLOAT(2)
 GO
