@@ -31,3 +31,5 @@ Baza danych systemu zarządzania hotelami.
 * Rozmowy telefoniczne
 * Archiwum rezerwacji
 
+## License
+[Apache License 2.0](https://github.com/JuliaSzymanska/SQLProject/blob/master/LICENSE)
