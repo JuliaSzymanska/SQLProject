@@ -12,8 +12,8 @@ id_hotelu INT NOT NULL PRIMARY KEY IDENTITY(100,1),
 nazwa_hotelu VARCHAR(70) NOT NULL,
 id_miasta INT NOT NULL  FOREIGN KEY REFERENCES miasto (id_miasta),
 adres_hotelu VARCHAR(100) NOT NULL,
-cena_bazowa_za_pokoj INT NOT NULL,
-cena_za_polaczenie_telefoniczne FLOAT(2) NOT NULL,
+cena_bazowa_za_pokoj MONEY NOT NULL,
+cena_za_polaczenie_telefoniczne MONEY NOT NULL,
 CONSTRAINT check_cena_bazowa_za_pokoj CHECK (cena_bazowa_za_pokoj > 0),
 CONSTRAINT check_cena_za_polaczenie_telefoniczne CHECK (cena_za_polaczenie_telefoniczne > 0)
 );
@@ -26,6 +26,7 @@ numer_pokoju INT,
 numer_telefonu_pokoju CHAR(5) NOT NULL UNIQUE,
 liczba_pomieszczen INT NOT NULL,
 liczba_przewidzianych_osob INT NOT NULL,
+UNIQUE(numer_pokoju, id_hotelu),
 CONSTRAINT check_liczba_pomieszczen CHECK (liczba_pomieszczen > 0),
 CONSTRAINT ckeck_liczba_przewidzianych_osob CHECK (liczba_przewidzianych_osob > 0),
 CONSTRAINT check_numer_telefonu CHECK (numer_telefonu_pokoju LIKE '[0-9][0-9][0-9][0-9][0-9]'),
@@ -35,7 +36,7 @@ GO
 CREATE TABLE usluga (
 id_uslugi INT NOT NULL PRIMARY KEY IDENTITY(1,1),
 nazwa_uslugi VARCHAR(50) NOT NULL,
-cena_uslugi INT NOT NULL,
+cena_uslugi MONEY NOT NULL,
 CONSTRAINT check_cena_uslugi CHECK (cena_uslugi > 0),
 );
 GO
@@ -201,14 +202,14 @@ FROM rezerwacja
 WHERE 1 = 0
 GO
 
---21. Dodaj do tabeli archiwum_rezerwacji kolumnê id_rezerwacji typu ca³kowitego unikatowego oraz cena_rezerwacji typu ca³kowitego oraz kolumnê id_rezerwacji_arch 
+--21. Dodaj do tabeli archiwum_rezerwacji kolumnê id_rezerwacji typu ca³kowitego unikatowego oraz cena_rezerwacji typu MONEY oraz kolumnê id_rezerwacji_arch 
 -- typu ca³kowitego przyrostowego od 10000 co 1 bêd¹ca kluczem g³ównym. 
 ALTER TABLE archiwum_rezerwacji
 ADD id_rezerwacji INT UNIQUE
 GO
 
 ALTER TABLE archiwum_rezerwacji 
-ADD cena_rezerwacji INT,
+ADD cena_rezerwacji MONEY,
 	id_rezerwacji_arch INT PRIMARY KEY IDENTITY(1000, 1)
 GO
 
@@ -305,7 +306,7 @@ GO
 -- utworzonej kolumny cena_za_polaczenie_telefoniczne pomno¿on¹ przez ró¿nicê minut pomiêdzy godzin¹ rozpoczêcia a godzin¹ zakoñczenia
 -- rozmowy razy cena_za_polaczenie_telefoniczne razy wspo³czynnik obliczony na podstawie funkcji oblicz_wspolczynnik. 
 ALTER TABLE archiwum_rezerwacji
-ADD cena_za_telefon FLOAT(2)
+ADD cena_za_telefon MONEY
 GO
 
 UPDATE arch
@@ -328,7 +329,7 @@ WHERE id_pokoju IN (SELECT id_pokoju FROM arch)
 --28. Dodaj do tabeli archiwum_rezerwacji kolumnê cena_za_uslugi typu zmiennoprzecinkowego z dwoma miejscami po przecinku. 
 -- Wstaw do nowo utworzonej kolumny cena_uslugi pomno¿on¹ razy liczba_dni_rezerwacji.
 ALTER TABLE archiwum_rezerwacji
-ADD cena_za_uslugi FLOAT(2)
+ADD cena_za_uslugi MONEY
 GO
 
 UPDATE arch
@@ -378,7 +379,7 @@ GO
 -- 31. Dodaj do tabeli archiwum_rezerwacji kolumnê cena_calkowita typu zmiennoprzecinkowego z dwoma miejscami po przecinku. 
 -- Wstaw do nowo utworzonej kolumny sumê kolumn cena_za_uslugi, cena_za_telefon, cena_rezerwacji. 
 ALTER TABLE archiwum_rezerwacji
-ADD cena_calkowita FLOAT(2)
+ADD cena_calkowita MONEY
 GO
 
 UPDATE arch
